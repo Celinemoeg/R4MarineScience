@@ -26,8 +26,8 @@ library(readxl)
 #use the package "here" to specify in which of the folders the data sett is in under the rproj
 
 # Practice Import A: Loading a standard comma-separated plain text file
-benthic_cover <- read_csv(here::here("data/workshop1/reef_cover_log.csv"))
-benthic_cover
+benthic_cover <-read_csv(here::here("data/workshop1/reef_cover_log.csv"))
+
 
 # Practice Import B: Parsing a tab-separated telemetry instrument array string
 acoustic_stream <- read_tsv(here::here("data/workshop1/acoustic_telemetry_stream.txt"))
@@ -129,5 +129,23 @@ heaviest_first <- arrange(penguins, desc(body_mass_g))
 
 # Execute nested sorting criteria: Group by species, then sort by descending bill length
 stratified_morphology <- arrange(penguins, species, desc(bill_length_mm))
+```
+
+##1.7.4 Introducing the Pipe (|>)
+
+Example: Instead of:
+
+```{r}
+#penguins_subset <- mutate(penguins, bill_ratio = bill_length_mm / bill_depth_mm)
+#penguins_final <- filter(penguins_subset, species == "Adelie")
+
+```
+
+You can simply write:
+```{r}
+penguins_final <- penguins %>% 
+  mutate(bill_ratio=bill_length_mm/bill_depth_mm) %>% 
+  filter(species=="adelie")
+penguins_final
 ```
 
