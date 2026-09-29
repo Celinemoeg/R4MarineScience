@@ -14,6 +14,8 @@ rm(list = ls())
 objects()
 ```
 
+#1.4 Ingesting data into R
+
 ```{r Library}
 # Load the primary data science framework and Excel import library
 library(tidyverse)
@@ -52,13 +54,80 @@ mangrove_data <- read_csv(
 mangrove_data # Have a look at the file 
 ```
 
+#1.5 Data frame architectures: Tibbles versus legacy tables
+
 ```{r}
 # Force a modern tibble to degrade into a legacy base R data frame structure
 benthic_cover_df <- as.data.frame(benthic_cover)
 # Print the old-style dataframe structure to view
 print(benthic_cover_df)
 # And compare with tibble alternative
-print(benthic_cover)
+print(benthic_cover) # The tibble tells me if the collumn is a chr, dbl, or a fct
 ```
 
+#1.6 Wrangling out ecological signals using Palmer Penguins
+
+```{r}
+# Load the package data into active memory
+library(palmerpenguins)
+data("penguins")
+
+# Examine the structure of the dataset - always do this when loading a new dataset!
+glimpse(penguins) # tidyverse version (from dplyr package)
+str(penguins) # base R version
+
+```
+
+```{r}
+# Generate an exploratory summary matrix
+summary(penguins)
+```
+
+#1.7 Foundational grammar: Slicing, filtering, sorting, and transforming
+
+##1.7.1 Isolating attributes with select()
+
+```{r}
+# Vertically slice specific morphometric variables by explicit name
+morphology_metrics <- select(penguins,species, bill_length_mm,bill_depth_mm,body_mass_g)
+glimpse(morphology_metrics)
+
+# Retain a continuous block of attributes using the colon operator
+spatial_block <- select(penguins, species:island)
+glimpse(spatial_block)
+
+# Discard logistics tracking attributes while preserving everything else using the minus sign
+clean_scientific_fields <- select(penguins, -year)
+glimpse(clean_scientific_fields)
+```
+
+```{r}
+# Isolate observations belonging to a single categorical target group
+adelie_cohort <- filter(penguins, species == "Adelie")
+glimpse(adelie_cohort)
+
+# Sift out individuals using continuous numerical boundary thresholds
+# Preserves only large penguins whose mass exceeds 4500 grams
+heavy_penguins <- filter(penguins, body_mass_g > 4500)
+
+# Combine multiple conditional parameters across separate attributes
+# Preserves records matching Gentoo penguins sampled explicitly on Biscoe Island
+biscoe_gentoo <- filter(penguins, species == "Gentoo" & island == "Biscoe")
+
+# Sift records matching multiple targeting flags within an explicit set
+sub_islands <- filter(penguins, island %in% c("Dream", "Torgersen"))
+
+```
+
+##1.7.3 Ordering sequences with arrange()
+```{r}
+# Sort penguins by ascending body mass (Default setting: Smallest mass first)
+lightest_first <- arrange(penguins, body_mass_g)
+glimpse(lightest_first)
+# Sort penguins in descending sequence using the desc() layout wrapper
+heaviest_first <- arrange(penguins, desc(body_mass_g))
+
+# Execute nested sorting criteria: Group by species, then sort by descending bill length
+stratified_morphology <- arrange(penguins, species, desc(bill_length_mm))
+```
 
