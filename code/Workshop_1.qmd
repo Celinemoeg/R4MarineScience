@@ -237,7 +237,7 @@ mass_compare_plot
 
 Pause for thought: Think about what this figure is telling you about the biology of these species of penguins on these different islands. What do you think a statistical test would tell you here?
 
-### - the larger penguins are on the island Biscoe and they are the species gentoo...
+Answer: the larger penguins are on the island Biscoe and they are the species gentoo. The only species apearing on all three island is the Adelie penguin, and it seems like it they have the same body mass on all the islands. 
 
 Challenge:
 In your .qmd template, try creating a new plot. Experiment with swapping sd_mass (standard deviation) for standard error—you will need to divide your sd by the square root of n (sd / sqrt(n)). See how that changes your visual interpretation of the data uncertainty. Present the summary table alongside the associated figure and write down your thoughts on the underlying ecological story that the data are telling.
