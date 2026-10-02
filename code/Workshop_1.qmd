@@ -221,10 +221,10 @@ mass_compare_plot <-  penguins %>%
     .groups = "drop"
   ) %>% 
   ggplot(aes(x = species, y = mean_mass, colour = island)) +
-  geom_point(size = 3) +
+  geom_point(size = 3, position = position_dodge(width = 0.5)) + #position helps move the point of the penguin species more visble
   geom_errorbar(aes(ymin = mean_mass - sd_mass, 
                     ymax = mean_mass + sd_mass), 
-                width = 0.2) +
+                width = 0.2, position = position_dodge(width = 0.5)) + # position helps move the error bars with the pints, making all the island and species visable.
   labs(title = "Mean Body Mass by Species and Island",
        subtitle = "Error bars represent standard deviation",
        y = "Mean Body Mass (g)",
@@ -235,26 +235,37 @@ mass_compare_plot
 
 ```
 
-Pause for thought: Think about what this figure is telling you about the biology of these species of penguins on these different islands. What do you think a statistical test would tell you here?
+**Pause for thought: Think about what this figure is telling you about the biology of these species of penguins on these different islands. What do you think a statistical test would tell you here?**
 
-Answer: the larger penguins are on the island Biscoe and they are the species gentoo. The only species apearing on all three island is the Adelie penguin, and it seems like it they have the same body mass on all the islands. 
+**Answer:** 
+Gentoo penguins, the heaviest species were found only on Biscoe Island, and Chinstrap penguins were found only on Dream Island. Adelie penguins were the only species found on all three islands,and their mean body mass looks similar across the three error bars. This suggest that island is not the main driver of body size, and that body size is mostly a species trait.
 
-Challenge:
-In your .qmd template, try creating a new plot. Experiment with swapping sd_mass (standard deviation) for standard error—you will need to divide your sd by the square root of n (sd / sqrt(n)). See how that changes your visual interpretation of the data uncertainty. Present the summary table alongside the associated figure and write down your thoughts on the underlying ecological story that the data are telling.
+To test this, i would compare the body mass of Adelie penguins between the three islands. if the test found no significant difference, that would mean i had found no evidence that island affects Adelie body mass.
+ 
+
+**Challenge:**
+**In your .qmd template, try creating a new plot. Experiment with swapping sd_mass (standard deviation) for standard error—you will need to divide your sd by the square root of n (sd / sqrt(n)). See how that changes your visual interpretation of the data uncertainty. Present the summary table alongside the associated figure and write down your thoughts on the underlying ecological story that the data are telling.**
 
 
 ```{r}
-penguins %>%
+penguins_SE <- penguins %>%
 group_by(species, island) %>%
   summarise( n = n(),
              mean_mass = mean(body_mass_g, na.rm = TRUE),
              error_mass = sd(body_mass_g, na.rm = TRUE) / sqrt(n()),
-             .groups = "drop") %>%
+             .groups = "drop")
+
+knitr::kable(penguins_SE, digits = 1)
+```
+
+
+```{r}
+penguins_SE %>% 
   ggplot(aes(x = species, y = mean_mass, colour = island)) +
-  geom_point(size = 3) +
+  geom_point(size = 3,position = position_dodge(width = 0.5)) + #position helps move the point of the penguin species more visble
   geom_errorbar(aes(ymin = mean_mass - error_mass,
                     ymax = mean_mass + error_mass),
-                width = 0.2) +
+                width = 0.2, position = position_dodge(width = 0.5)) + # position helps move the error bars with the pints, making all the island and species visable.
   labs(title = "Mean Body Mass by Species and Island",
        subtitle = "Error bars represent Standard Error",
        y = "Mean Body Mass (g)",
