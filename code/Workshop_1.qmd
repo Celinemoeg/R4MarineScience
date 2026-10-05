@@ -9,9 +9,8 @@ execute:
   message: false
 ---
 
-
+#### Housekeeping
 ```{r}
-#| label: Housekeeping
 ## Inventory every active object currently residing in session RAM
 objects()
 ## Purge global environment
@@ -21,9 +20,8 @@ objects()
 ```
 
 # 1.4 Ingesting data into R
-
+#### Library
 ```{r}
-#| label: Library
 # Load the primary data science framework and Excel import library
 library(tidyverse)
 library(readxl)
@@ -210,6 +208,38 @@ print(biological_signal)
 
 # 1.9 Integrating data grammar with visual diagnostics in qmd
 
+**1.	Summary Table:** Pipe your data to group_by() and summarise() to calculate the mean body mass for each species and island.
+
+```{r}
+mean_bodymass <- penguins %>% 
+  group_by(species,island) %>% #group by - focuses only on these 2 groups
+  summarise(
+    mean_mass = mean(body_mass_g, na.rm=TRUE), #na.rm tells R to remove na's before calculation.
+    .groups = "drop") 
+
+knitr::kable(mean_bodymass, digits = 1)
+```
+
+
+**2.	Visualisation:** Pipe the same dataset into ggplot() to create a boxplot of body_mass_g by species, with the island variable mapped to fill or facet_wrap().
+
+```{r}
+penguins %>% 
+  ggplot(
+       aes(x=species,y=body_mass_g, fill=island))+
+  geom_boxplot()+
+  labs(title = "Body Mass by Species and Island",
+       x= "Species",
+       y="Body Mass (g)",
+       fill="Island")+
+  theme_minimal()
+```
+
+
+
+
+##1.9.2 Piping Directly to Visualisation
+
 ```{r}
 # Pipe directly from aggregation to plotting with error bars
 mass_compare_plot <-  penguins %>% 
@@ -229,7 +259,8 @@ mass_compare_plot <-  penguins %>%
        subtitle = "Error bars represent standard deviation",
        y = "Mean Body Mass (g)",
        x = "Species") +
-  theme_minimal()
+  theme_minimal()+
+  coord_cartesian(ylim = c(3250, 5500)) #adjusting y axis
 
 mass_compare_plot
 
@@ -252,7 +283,7 @@ penguins_SE <- penguins %>%
 group_by(species, island) %>%
   summarise( n = n(),
              mean_mass = mean(body_mass_g, na.rm = TRUE),
-             error_mass = sd(body_mass_g, na.rm = TRUE) / sqrt(n()),
+             SE_mass = sd(body_mass_g, na.rm = TRUE) / sqrt(n()), # Calculate standard error  
              .groups = "drop")
 
 knitr::kable(penguins_SE, digits = 1)
@@ -260,18 +291,58 @@ knitr::kable(penguins_SE, digits = 1)
 
 
 ```{r}
-penguins_SE %>% 
+Mass_compare_SE <- penguins_SE %>% 
   ggplot(aes(x = species, y = mean_mass, colour = island)) +
   geom_point(size = 3,position = position_dodge(width = 0.5)) + #position helps move the point of the penguin species more visble
-  geom_errorbar(aes(ymin = mean_mass - error_mass,
-                    ymax = mean_mass + error_mass),
+  geom_errorbar(aes(ymin = mean_mass - SE_mass,
+                    ymax = mean_mass + SE_mass),
                 width = 0.2, position = position_dodge(width = 0.5)) + # position helps move the error bars with the pints, making all the island and species visable.
   labs(title = "Mean Body Mass by Species and Island",
        subtitle = "Error bars represent Standard Error",
        y = "Mean Body Mass (g)",
        x = "Species") +
-  theme_minimal()
+  theme_minimal()+
+  coord_cartesian(ylim = c(3250, 5500)) #adjusting y axis to be the same as SD plot
+
+Mass_compare_SE
 ```
 
 
-- they all got a lot shorter...
+**Answer:**
+All the bars got shorter. The SE values are smaller than the SD values. This is because to get SE we divide SD by the square root of n, meaning the larger the sample size the lower the SE. Compared to the SD, SE tells us how precisely we have estimated the mean penguin body mass, while the SD tells us how much individual penguins vary from the mean body mass. 
+The penguin species with the highest SE is Adelie on Biscoe Island with an SE of 73.5 g, and the lowest is Gentoo on Biscoe Island with a SE of 45.3 g. This would be because Gentoo have a higher n than all the other species on the other Islands.
+It still looks like the Adelie penguins error bars overlap and looks the same on all three Islands. This sports the conclution that the body mass is a species trait, however a statistical test would be needed to confirm this.
+
+The SE plot makes the mean body mass look more precisely estimated than the SD plot did, but this dose not mean the penguins vary less. 
+
+
+# 1.10 Saving, exporting, and version milestones
+
+```{r}
+# Create output directories if they do not exist:
+if (!dir.exists("outputs")) dir.create("outputs") # folder for figs
+if (!dir.exists("outputs")) dir.create("outputs") # folder for tables
+if (!dir.exists("Rdata")) dir.create("Rdata") # folder for Rdata objects
+
+```
+
+#### Tables
+```{r}
+# 1. Exporting our collapsed summary table as a universal flat text file
+write_csv(biological_signal, "outputs/penguin_species_mass_summary.csv")
+
+# 2. Saving our cleaned morphological cohort table as a native R binary file
+saveRDS(penguins_SE, "outputs/penguins_SE.rds")
+
+```
+
+
+#### Figures
+
+```{r}
+ggsave("outputs/mass_compare_plot.png", 
+       plot = mass_compare_plot, 
+       width = 120, height = 120, 
+       units = "mm", dpi = 300)
+```
+
