@@ -23,6 +23,8 @@ objects()
 ```{r}
 # Load the primary data science framework
 library(tidyverse)
+library(palmerpenguins)
+library(lubridate)
 ```
 
 
@@ -55,10 +57,11 @@ table2
 **table 3**
 ```{r} 
 table3 <- tibble(
-  country = c("Afghanistan", "Afghanistan","Brazil", "Brazil", "China", "China"),
-  year = c(1999,2000,1999,2000,1999,2000),
-  rate= c(745/19987071,2666/20595360,37737/172006362,80488/174504898,212258/1272915272,213766/1280428583)
-) # same with this one, it is messy
+  country = c("Afghanistan", "Afghanistan", "Brazil", "Brazil", "China", "China"),
+  year = c(1999, 2000, 1999, 2000, 1999, 2000),
+  rate = c("745/19987071", "2666/20595360", "37737/172006362",
+           "80488/174504898", "212258/1272915272", "213766/1280428583")
+)
 table3
 ```
 
@@ -100,4 +103,477 @@ billboard %>% pivot_longer( # Pivot longer creates a long df of a wide one.
 )
 ```
 
+**Pivoting longer - example**
+```{r}
+df <- tribble( # Save the tribble as a dataset called df
+  ~id,  ~bp1, ~bp2,
+   "A",  100,  120,
+   "B",  140,  115,
+   "C",  120,  125
+)
+df
+```
+
+However, we want our new (tidy) dataset to have three variables: 
+1.	id (which already exists)
+2.	measurement (the column names) 
+3.	value (the cell values)
+
+**Pivot longer**
+we use pivot longer to get 3 variables
+```{r}
+df %>% 
+  pivot_longer(
+    cols = bp1:bp2, # The chosen columns to that we are going to pivot into rows 
+    names_to = "measurement", # The names is the bp1 and bp2 theire collumn is going to be called measurment 
+    values_to = "value" # The values they hold will go into a difrent collumn called value
+  )
+
+```
+
+# 2.5 Widening datasets
+
+Lengthening the dataset is the oposite of widening it, and we use the function pivot_wider
+
+For this i will use an example from R4DS, the cms_patient_experience dataset 
+
+```{r}
+cms_patient_experience %>% 
+  distinct(measure_cd, measure_title) # shows the complete sett of values of the df
+```
+
+**Pivot wider**
+```{r}
+cms_patient_experience %>% 
+    pivot_wider(
+    id_cols = starts_with("org"), # Says which columns identify a row, and pics every column that starts with "org"
+    names_from = measure_cd, # says whcih column values become the new column names
+    values_from = prf_rate # says which column supplies the numbers that fill the new columns.
+  )
+```
+
+Adding the "id_cols = starts_with("org")" line helped us make the output we wanted, not adding this line made the df output look a bit off. 
+
+**Pivoting wider - example**
+Changed df to df_2 so it is not the same as the earlier example.
+
+```{r}
+# Creating the df
+df_2 <- tribble(
+  ~id, ~measurement, ~value,
+  "A",        "bp1",    100,
+  "B",        "bp1",    140,
+  "B",        "bp2",    115, 
+  "A",        "bp2",    120,
+  "A",        "bp3",    105
+)
+```
+
+
+```{r}
+df_2 %>% 
+  pivot_wider(
+    names_from = measurement,
+    values_from = value
+  )
+```
+
+```{r}
+df_2 %>% 
+  distinct(measurement) |> 
+  pull() #chek the unique values
+```
+```{r}
+df_2 %>% 
+  select(-measurement, -value) |> 
+  distinct()
+```
+
+pivot_wider can now combie these results to generate an empty df
+
+```{r}
+df_2 %>% 
+  select(-measurement, -value) %>% 
+  distinct() %>%  
+  mutate(x = NA, y = NA, z = NA) 
+# creates a empty df
+```
+
+
+# 2.6 Pivoting Exercises using Palmer Penguins
+
+**Lengthening data with** pivot_longer()
+
+```{r}
+#Create a long df version of the penguins df
+penguins_long <- penguins %>% 
+  pivot_longer(
+    cols = c(bill_length_mm,bill_depth_mm, flipper_length_mm, body_mass_g),
+    names_to = "measurement_type",
+    values_to = "value"
+  )
+# view the result
+head(penguins_long) 
+```
+
+**Create ggplot**
+```{r}
+penguins_long %>% 
+  drop_na(value) %>% # Remover the NA values in the value column
+    ggplot(aes(x = value, fill = species)) + # Tells ggplot what values go where
+  geom_histogram(bins = 30, alpha = 0.7, colour = "black") + 
+  facet_wrap(~ measurement_type, scales = "free_x") +
+  theme_minimal() +
+  labs(
+    title = "Morphometric distributions across penguin species",
+    x = "Measurement value",
+    y = "Frequency"
+  )
+
+```
+
+**Widening data with** pivot_wider()
+Time to do the oposite
+
+```{r}
+# Calculate the mean body mass for each species
+mass_summary <- penguins %>% 
+  drop_na(body_mass_g) %>% 
+  group_by(species, island) %>% 
+  summarise(mean_mass = mean(body_mass_g))
+# View the df
+head(mass_summary)
+
+```
+The above verion is tidy but not great for publication
+
+```{r}
+# Creating a clean matrix of species by Isalnd
+mass_matrix <- mass_summary %>% 
+  pivot_wider( #Using pivot_wider to crate a column for each island
+    names_from = island,
+    values_from = mean_mass
+  )
+# view the df
+head(mass_matrix)
+
+```
+
+
+# 2.7 Separating and uniting data tables
+
+Using the function separete() to tidy table 3 from earlier
+
+**Here’s table3:**
+```{r}
+head(table3)
+```
+
+I want to split the rate column up into two variables 
+1. cases 
+2. Population
+
+```{r}
+table3 %>% 
+  separate(rate, into = c("cases", "population"))
+
+# same code but uses the "sep=" to specify what charakter to separate into two coloumns
+
+table3 %>% 
+  separate(rate, into = c("cases", "population"), sep = "/")
+
+# In both these something went wrong, i am asuming it is beceause both tibbles have population and cases in the chr class
+```
+
+**Note** Problem above i needed to change the way i created the tibble at the begining, the rate had to be written in quatas, sutch as "745/19987071", if not R does the calculation and removes the "/". 
+
+```{r}
+table3 %>% 
+  separate(rate, into = c("cases", "population"), convert = TRUE) # Convets = TRUE keeps the two new columns as int
+
+```
+
+**Using** unite():
+This does the inverse of separate()
+
+**Table 5**
+```{r}
+#Creating tibble from the data in the workbook
+table5 <- tibble(
+  country = c("Afghanistan", "Afghanistan", "Brazil", "Brazil", "China", "China"),
+  century = c(19, 20, 19, 20, 19, 20),
+  year = c("99","00","99","00","99","00"), # put them in quatas to keep dubble zero on the 2000
+  cases = c(745, 2666, 37737, 80488, 212258, 213766),
+  population = c(19987071, 20595360, 172006362, 174504898, 1272915272, 1280428583)
+) # This is a tidy datasett
+table5
+```
+
+```{r}
+table5 %>% 
+  unite(new, century, year, sep = "")
+```
+
+# 2.8 Wrangling strings and dates
+
+**Standardising text with** stringr
+
+```{r}
+# A remarkably messy data frame of field sites
+messy_sites <- tibble(
+  site_id = c(" Nelly Bay", "nelly_bay", "NELLY BAY", " Geoffrey_Bay ", "geoffrey bay")
+)
+
+
+# Using stringr within mutate to standardize the text
+clean_sites <- messy_sites |>
+  mutate(
+    # 1. Convert everything to lowercase
+    site_clean = str_to_lower(site_id),
+        # 3. Trim any leading or trailing whitespace (invisible spaces at the ends)
+    site_clean = str_trim(site_clean), # i moved nuber 3 up so it removes the invisible space before they become _
+    # 2. Replace any spaces with underscores
+    site_clean = str_replace_all(site_clean, pattern = " ", replacement = "_")
+  )
+
+print(clean_sites)
+clean_sites
+
+```
+
+**Mastering time with** lubridate
+
+```{r}
+# Parsing different date formats
+date_1 <- dmy("25/12/2026")
+date_2 <- ymd("2026-12-25")
+
+# R now recognizes these as identical Date objects
+date_1 == date_2
+
+```
+
+Create a tibble with time and tmeprature.
+```{r}
+# A tibble of raw sensor data with a messy character timestamp
+sensor_data <- tibble(
+  raw_time = c("14-05-2026 08:30:00", "14-05-2026 08:45:00", "14-05-2026 09:00:00"),
+  temperature = c(24.5, 24.6, 24.4)
+)
+
+# Converting character strings to true POSIXct datetime objects
+sensor_clean <- sensor_data |>
+  mutate(
+    true_time = dmy_hms(raw_time)
+  )
+
+print(sensor_clean)
+
+```
+
+# 2.9 Relational data: Joining tables
+
+Data split across multiple tables, here I will learn how to bring two tables together.
+
+**Create 2 tables:**
+```{r}
+# Table 1: Biological observation data
+observations <- tibble(
+  site_code = c("NB", "GB", "MI", "NB", "HB"),
+  species = c("Trout", "Snapper", "Trout", "Cod", "Trout"),
+  count = c(5, 2, 1, 3, 8)
+)
+
+# Table 2: Spatial metadata
+site_metadata <- tibble(
+  site_code = c("NB", "GB", "MI", "RP", "WP"),
+  zone = c("Marine National Park", "Conservation Park", "Habitat Protection", "General Use", "Other Use"),
+  lat = c(-19.16, -19.15, -19.14, -19.12, -19.11)
+)
+
+```
+
+**The workhorse:** left_ and right_join()
+
+The left and right jon works the same, it just depend on which table you want to use as a base, the left koin keeps all the rows in the left table and matches data from the right table. 
+If matches does not exist it fills gaps with NA
+
+```{r}
+# Joining metadata to our observations
+joined_data <- observations %>% 
+  left_join(site_metadata, by = join_by(site_code))
+
+print(joined_data)
+
+```
+
+**The strict filter:** inner_join()
+
+Inner_join only keeps rows that have complete matches in both tables.
+
+```{r}
+matched_data <- observations |>
+  inner_join(site_metadata, by = join_by(site_code))
+print(matched_data)
+```
+
+**The detective:** anti_join()
+This one filters the left table to only show rows that do not have a match in the right table.
+
+```{r}
+# Which observations are missing from our metadata dictionary?
+missing_context <- observations |>
+  anti_join(site_metadata, by = join_by(site_code))
+print(missing_context)
+```
+
+# 2.10 Handling missing values
+
+**Converting legacy errors with** na_if()
+
+**Create tibble**
+```{r}
+# Raw data from an old temperature logger
+logger_data <- tibble(
+  depth_m = c(10, 20, 30, 40),
+  temp_c = c(24.5, 24.1, -999, 23.5)) # -999 is a known sensor error code
+
+# Convert the -999 error codes to true NA values
+fixed_logger <- logger_data %>% 
+  mutate(temp_c = na_if(temp_c, -999))
+
+print(fixed_logger)
+
+```
+
+**Replacing missing values with** coalesce()
+Sometimes NA does not mean missing data, but it can be a known fixed number, often zero. 
+
+```{r}
+# Simulate some count data
+shark_counts <- tibble(
+  site = c("Reef_A", "Reef_B", "Reef_C"),
+  shark_count = c(3, NA, 5)) # The NA here actually means 0 sharks were seen
+
+# Replace NA with 0 
+shark_fixed <- shark_counts |>
+  mutate(shark_count = coalesce(shark_count, 0))
+
+print(shark_fixed)
+
+```
+
+**The special case of** NaN (Not a Number)
+NaN means "this value is mathematically impossible"
+
+```{r}
+cpue_data <- tibble(
+  site = c("Bay_1", "Bay_2"),
+  catch = c(10, 0),
+  effort_hours = c(2, 0))
+
+# Calculating CPUE (catch / effort)
+cpue_calc <- cpue_data |>
+  mutate(
+    cpue = catch / effort_hours) # 0/0 canot be calculated
+
+print(cpue_calc)
+
+```
+
+**Implicit missing values and the zero-data framework:** complete()
+
+```{r}
+raw_catch <- tibble(
+  site = c("Reef_1", "Reef_1", "Reef_2"),
+  species = c("Pmaculatus", "Pleopardus", "Pmaculatus"),
+  count = c(5, 2, 8))
+raw_catch
+```
+
+```{r}
+# Force inclusion of hidden zero-catch data
+full_catch_matrix <- raw_catch |>
+  complete(site, species, fill = list(count = 0))
+
+print(full_catch_matrix)
+
+```
+
+**The nuclear option:** drop_na()
+If NA reprecent wrong data of failed insturmental readings, and it needs to be removed. drop_na() will remove the entire row
+```{r}
+sensor_log <- tibble(
+  day = 1:4,
+  salinity = c(35.2, 35.1, NA, 35.3)
+)
+
+# Remove any row where salinity is missing
+clean_log <- sensor_log %>% 
+  drop_na(salinity)
+
+sensor_log
+clean_log
+```
+
+# 2.11 Practical Exercises: Penguins, Pivots, and Relational Data
+
+In this exercise, you will combine all the skills you have learned in this workshop. You have the clean penguins dataset, but a colleague has just emailed you a supplementary metadata file containing the GPS coordinates and the date the primary weather stations were installed on each island.
+
+#### Exercise 1: Cleaning the messy metadata
+
+This is the messy data table
+```{r}
+# The messy metadata provided by your colleague
+island_metadata <- tibble(
+  island_name = c(" biscoe", "Dream ", "Torgersen"),
+  station_install = c("15/01/2003", "22-03-2004", "05/11/2001"),
+  latitude = c(-64.81, -64.73, -64.76)
+)
+
+print(island_metadata)
+
+```
+
+**Task:** Create a new object called clean_metadata. Using mutate(), stringr, and lubridate, fix the island_name column so that it perfectly matches the island column in the penguins dataset (hint: watch out for those hidden spaces!). Then, convert the station_install column into a proper Date object.
+
+```{r}
+penguins
+```
+
+
+```{r}
+# clean the Island names so they match the original penguins data
+clean_metadata <- island_metadata %>% 
+  mutate(
+    # 1. Convert everything to lowercase
+    island_name  = str_to_sentence(island_name),
+        # 3. Trim any leading or trailing whitespace (invisible spaces at the ends)
+    island_name  = str_trim(island_name ), # i moved nuber 3 up so it removes the invisible space before they become _
+    # 2. Replace any spaces with underscores
+    island_name  = str_replace_all(island_name, pattern = " ", replacement = "_")
+  )
+clean_metadata
+```
+
+
+```{r}
+# Fix the station_install column into a proper date object
+clean_metadata<- clean_metadata %>% 
+mutate(
+    station_install = dmy(station_install))
+```
+
+#### Exercise 2: The Relational Join
+
+**Task:** Create a new object called penguins_spatial. Use a left_join() to attach your clean_metadata to the main penguins dataset. Hint: Because the column containing the island names is called island in the penguins dataset, and island_name in your metadata, you will need to specify how they match using by = join_by(island == island_name).
+
+```{r}
+# Joining metadata to our observations
+joined_data <- observations %>% 
+  left_join(site_metadata, by = join_by(site_code))
+
+print(joined_data)
+
+```
 
