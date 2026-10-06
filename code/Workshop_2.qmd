@@ -587,3 +587,34 @@ head(penguins_spatial)
 
 #### Exercise 3: The Wide Summary Matrix
 
+A collaborator has asked for a clean, publication-ready table showing the maximum body mass recorded for each species, separated by island.
+
+**Task:** Starting with your penguins_spatial dataset:
+
+Drop any missing values in the body_mass_g column.
+
+1.	Group by species and island.
+
+2.	Summarise the data to find the maximum body mass (max()).
+
+3.	Pivot the dataset wider so that the species form the rows, and the islands form the columns.
+
+```{r}
+max_body_mass <- penguins_spatial %>% 
+  drop_na(body_mass_g) %>% 
+  group_by(species, island)%>%
+summarise(max_mass=max(body_mass_g),
+          .groups = "drop") %>% 
+  pivot_wider(
+    names_from = island,
+    values_from = max_mass
+  )
+
+max_body_mass
+```
+
+
+
+
+
+
