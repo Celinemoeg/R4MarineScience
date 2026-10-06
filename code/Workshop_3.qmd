@@ -1,0 +1,27 @@
+---
+title: "Workshop 3: Advanced data wrangling: Extracting ecological signals from noisy systems"
+author: "Celine M. Egsaeter"
+format:
+  html:
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+
+#### Housekeeping
+```{r}
+## Inventory every active object currently residing in session RAM
+objects()
+## Purge global environment
+rm(list = ls())
+# Confirm that global session memory now completely vacant
+objects()
+```
+
+#### Library
+```{r}
+# Load the primary data science framework
+library(tidyverse)
+```
