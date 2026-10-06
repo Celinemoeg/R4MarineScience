@@ -542,16 +542,19 @@ penguins
 ```
 
 
+
 ```{r}
 # clean the Island names so they match the original penguins data
 clean_metadata <- island_metadata %>% 
+  # Reanames the column to match the one in the penguins df
+  rename(island = island_name) %>% 
   mutate(
     # 1. Convert everything to lowercase
-    island_name  = str_to_sentence(island_name),
+    island  = str_to_sentence(island),
         # 3. Trim any leading or trailing whitespace (invisible spaces at the ends)
-    island_name  = str_trim(island_name ), # i moved nuber 3 up so it removes the invisible space before they become _
+    island  = str_trim(island), # i moved nuber 3 up so it removes the invisible space before they become _
     # 2. Replace any spaces with underscores
-    island_name  = str_replace_all(island_name, pattern = " ", replacement = "_")
+    island = str_replace_all(island, pattern = " ", replacement = "_")
   )
 clean_metadata
 ```
@@ -570,10 +573,17 @@ mutate(
 
 ```{r}
 # Joining metadata to our observations
-joined_data <- observations %>% 
-  left_join(site_metadata, by = join_by(site_code))
-
-print(joined_data)
+penguins_spatial <- penguins %>% 
+  left_join(clean_metadata, by = join_by(island))
 
 ```
+
+Check that it worked
+```{r}
+# Scroll to the right to see the new columns
+head(penguins_spatial)
+#it did work
+```
+
+#### Exercise 3: The Wide Summary Matrix
 
