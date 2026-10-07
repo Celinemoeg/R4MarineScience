@@ -1,15 +1,30 @@
 ---
 title: "Workshop 2: Advanced data wrangling: Extracting ecological signals from noisy systems"
 author: "Celine M. Egsaeter"
+date: today
+date-format: "D MMMM YYYY"
 format:
   html:
-    embed-resources: true
+    theme: minty             # Clean, modern typography (or try 'minty','cosmo' 'flatly', 'zephyr')
+    toc: true                 # Floating Table of Contents
+    toc-depth: 3
+    toc-location: left
+    code-fold: show           # Allows readers to collapse/expand code blocks
+    code-summary: "Show code"
+    code-tools: true          # Adds a toggle to view source code
+    embed-resources: true     # Keeps everything in a single, shareable HTML file
+    df-print: paged           # Formats raw data frame prints cleanly
 execute:
   warning: false
   message: false
+  echo: true                  # Ensures code chunks are visible by default
+fig-width: 8
+fig-height: 5
+fig-align: center
 ---
 
-#### Housekeeping
+**Housekeeping**
+
 ```{r}
 ## Inventory every active object currently residing in session RAM
 objects()
@@ -19,7 +34,8 @@ rm(list = ls())
 objects()
 ```
 
-#### Library
+**Library**
+
 ```{r}
 # Load the primary data science framework
 library(tidyverse)
@@ -28,12 +44,12 @@ library(lubridate)
 library(readxl) # For reading in excel files
 ```
 
-
 # 2.2 Tidying data
 
-1.	Put each dataset in a tibble (special dataframe)
+1.  Put each dataset in a tibble (special dataframe)
 
 **table 1**
+
 ```{r}
 #Creating tibble from the data in the workbook
 table1 <- tibble(
@@ -46,6 +62,7 @@ table1
 ```
 
 **table 2**
+
 ```{r}
 table2 <- tibble(
   country = c("Afghanistan", "Afghanistan","Afghanistan","Afghanistan", "Brazil", "Brazil", "Brazil", "Brazil", "China", "China","China", "China"),
@@ -56,7 +73,8 @@ table2
 ```
 
 **table 3**
-```{r} 
+
+```{r}
 table3 <- tibble(
   country = c("Afghanistan", "Afghanistan", "Brazil", "Brazil", "China", "China"),
   year = c(1999, 2000, 1999, 2000, 1999, 2000),
@@ -65,7 +83,6 @@ table3 <- tibble(
 )
 table3
 ```
-
 
 ```{r}
 # Compute rate per 10,000
@@ -77,7 +94,6 @@ table1 %>%
   count(year, wt = cases)
 ```
 
-
 ```{r}
 # Visualise changes over time
 ggplot(table1, aes(year, cases)) + 
@@ -86,7 +102,7 @@ ggplot(table1, aes(year, cases)) +
 
 ```
 
-# 2.3 Pivoting data to make it tidy
+# Pivoting data to make it tidy
 
 # 2.4 Lengthening datasets
 
@@ -94,7 +110,9 @@ ggplot(table1, aes(year, cases)) +
 # We are using the data billboard as practise
 billboard
 ```
+
 **pivot longer**
+
 ```{r}
 billboard %>% pivot_longer( # Pivot longer creates a long df of a wide one.
   cols = starts_with("wk"), # chooses the collums starting with wk
@@ -105,6 +123,7 @@ billboard %>% pivot_longer( # Pivot longer creates a long df of a wide one.
 ```
 
 **Pivoting longer - example**
+
 ```{r}
 df <- tribble( # Save the tribble as a dataset called df
   ~id,  ~bp1, ~bp2,
@@ -115,13 +134,10 @@ df <- tribble( # Save the tribble as a dataset called df
 df
 ```
 
-However, we want our new (tidy) dataset to have three variables: 
-1.	id (which already exists)
-2.	measurement (the column names) 
-3.	value (the cell values)
+However, we want our new (tidy) dataset to have three variables: 1. id (which already exists) 2. measurement (the column names) 3. value (the cell values)
 
-**Pivot longer**
-we use pivot longer to get 3 variables
+**Pivot longer** we use pivot longer to get 3 variables
+
 ```{r}
 df %>% 
   pivot_longer(
@@ -136,7 +152,7 @@ df %>%
 
 Lengthening the dataset is the oposite of widening it, and we use the function pivot_wider
 
-For this i will use an example from R4DS, the cms_patient_experience dataset 
+For this i will use an example from R4DS, the cms_patient_experience dataset
 
 ```{r}
 cms_patient_experience %>% 
@@ -144,6 +160,7 @@ cms_patient_experience %>%
 ```
 
 **Pivot wider**
+
 ```{r}
 cms_patient_experience %>% 
     pivot_wider(
@@ -153,10 +170,9 @@ cms_patient_experience %>%
   )
 ```
 
-Adding the "id_cols = starts_with("org")" line helped us make the output we wanted, not adding this line made the df output look a bit off. 
+Adding the "id_cols = starts_with("org")" line helped us make the output we wanted, not adding this line made the df output look a bit off.
 
-**Pivoting wider - example**
-Changed df to df_2 so it is not the same as the earlier example.
+**Pivoting wider - example** Changed df to df_2 so it is not the same as the earlier example.
 
 ```{r}
 # Creating the df
@@ -169,7 +185,6 @@ df_2 <- tribble(
   "A",        "bp3",    105
 )
 ```
-
 
 ```{r}
 df_2 %>% 
@@ -184,6 +199,7 @@ df_2 %>%
   distinct(measurement) |> 
   pull() #chek the unique values
 ```
+
 ```{r}
 df_2 %>% 
   select(-measurement, -value) |> 
@@ -199,7 +215,6 @@ df_2 %>%
   mutate(x = NA, y = NA, z = NA) 
 # creates a empty df
 ```
-
 
 # 2.6 Pivoting Exercises using Palmer Penguins
 
@@ -218,6 +233,7 @@ head(penguins_long)
 ```
 
 **Create ggplot**
+
 ```{r}
 penguins_long %>% 
   drop_na(value) %>% # Remover the NA values in the value column
@@ -233,8 +249,7 @@ penguins_long %>%
 
 ```
 
-**Widening data with** pivot_wider()
-Time to do the oposite
+**Widening data with** pivot_wider() Time to do the oposite
 
 ```{r}
 # Calculate the mean body mass for each species
@@ -246,6 +261,7 @@ mass_summary <- penguins %>%
 head(mass_summary)
 
 ```
+
 The above verion is tidy but not great for publication
 
 ```{r}
@@ -260,19 +276,17 @@ head(mass_matrix)
 
 ```
 
-
 # 2.7 Separating and uniting data tables
 
 Using the function separete() to tidy table 3 from earlier
 
 **Here’s table3:**
+
 ```{r}
 head(table3)
 ```
 
-I want to split the rate column up into two variables 
-1. cases 
-2. Population
+I want to split the rate column up into two variables 1. cases 2. Population
 
 ```{r}
 table3 %>% 
@@ -286,7 +300,7 @@ table3 %>%
 # In both these something went wrong, i am asuming it is beceause both tibbles have population and cases in the chr class
 ```
 
-**Note** Problem above i needed to change the way i created the tibble at the begining, the rate had to be written in quatas, sutch as "745/19987071", if not R does the calculation and removes the "/". 
+**Note** Problem above i needed to change the way i created the tibble at the begining, the rate had to be written in quatas, sutch as "745/19987071", if not R does the calculation and removes the "/".
 
 ```{r}
 table3 %>% 
@@ -294,10 +308,10 @@ table3 %>%
 
 ```
 
-**Using** unite():
-This does the inverse of separate()
+**Using** unite(): This does the inverse of separate()
 
 **Table 5**
+
 ```{r}
 #Creating tibble from the data in the workbook
 table5 <- tibble(
@@ -355,6 +369,7 @@ date_1 == date_2
 ```
 
 Create a tibble with time and tmeprature.
+
 ```{r}
 # A tibble of raw sensor data with a messy character timestamp
 sensor_data <- tibble(
@@ -377,6 +392,7 @@ print(sensor_clean)
 Data split across multiple tables, here I will learn how to bring two tables together.
 
 **Create 2 tables:**
+
 ```{r}
 # Table 1: Biological observation data
 observations <- tibble(
@@ -394,10 +410,9 @@ site_metadata <- tibble(
 
 ```
 
-**The workhorse:** left_ and right_join()
+**The workhorse:** left\_ and right_join()
 
-The left and right jon works the same, it just depend on which table you want to use as a base, the left koin keeps all the rows in the left table and matches data from the right table. 
-If matches does not exist it fills gaps with NA
+The left and right jon works the same, it just depend on which table you want to use as a base, the left koin keeps all the rows in the left table and matches data from the right table. If matches does not exist it fills gaps with NA
 
 ```{r}
 # Joining metadata to our observations
@@ -418,8 +433,7 @@ matched_data <- observations |>
 print(matched_data)
 ```
 
-**The detective:** anti_join()
-This one filters the left table to only show rows that do not have a match in the right table.
+**The detective:** anti_join() This one filters the left table to only show rows that do not have a match in the right table.
 
 ```{r}
 # Which observations are missing from our metadata dictionary?
@@ -433,6 +447,7 @@ print(missing_context)
 **Converting legacy errors with** na_if()
 
 **Create tibble**
+
 ```{r}
 # Raw data from an old temperature logger
 logger_data <- tibble(
@@ -447,8 +462,7 @@ print(fixed_logger)
 
 ```
 
-**Replacing missing values with** coalesce()
-Sometimes NA does not mean missing data, but it can be a known fixed number, often zero. 
+**Replacing missing values with** coalesce() Sometimes NA does not mean missing data, but it can be a known fixed number, often zero.
 
 ```{r}
 # Simulate some count data
@@ -464,8 +478,7 @@ print(shark_fixed)
 
 ```
 
-**The special case of** NaN (Not a Number)
-NaN means "this value is mathematically impossible"
+**The special case of** NaN (Not a Number) NaN means "this value is mathematically impossible"
 
 ```{r}
 cpue_data <- tibble(
@@ -501,8 +514,8 @@ print(full_catch_matrix)
 
 ```
 
-**The nuclear option:** drop_na()
-If NA reprecent wrong data of failed insturmental readings, and it needs to be removed. drop_na() will remove the entire row
+**The nuclear option:** drop_na() If NA reprecent wrong data of failed insturmental readings, and it needs to be removed. drop_na() will remove the entire row
+
 ```{r}
 sensor_log <- tibble(
   day = 1:4,
@@ -524,6 +537,7 @@ In this exercise, you will combine all the skills you have learned in this works
 #### Exercise 1: Cleaning the messy metadata
 
 This is the messy data table
+
 ```{r}
 # The messy metadata provided by your colleague
 island_metadata <- tibble(
@@ -542,8 +556,6 @@ print(island_metadata)
 penguins
 ```
 
-
-
 ```{r}
 # clean the Island names so they match the original penguins data
 clean_metadata <- island_metadata %>% 
@@ -559,7 +571,6 @@ clean_metadata <- island_metadata %>%
   )
 clean_metadata
 ```
-
 
 ```{r}
 # Fix the station_install column into a proper date object
@@ -580,6 +591,7 @@ penguins_spatial <- penguins %>%
 ```
 
 Check that it worked
+
 ```{r}
 # Scroll to the right to see the new columns
 head(penguins_spatial)
@@ -594,11 +606,11 @@ A collaborator has asked for a clean, publication-ready table showing the maximu
 
 Drop any missing values in the body_mass_g column.
 
-1.	Group by species and island.
+1.  Group by species and island.
 
-2.	Summarise the data to find the maximum body mass (max()).
+2.  Summarise the data to find the maximum body mass (max()).
 
-3.	Pivot the dataset wider so that the species form the rows, and the islands form the columns.
+3.  Pivot the dataset wider so that the species form the rows, and the islands form the columns.
 
 ```{r}
 max_body_mass <- penguins_spatial %>% 
@@ -614,27 +626,28 @@ summarise(max_mass=max(body_mass_g),
 max_body_mass
 ```
 
-
 # 2.12 Keystone exercise: Estuary Fish Survey - Data Rescue Mission
 
 **The Premise:** You have inherited a project from a former PhD student who was studying the relationship between water quality and predatory fish assemblages along the Ross River Estuary gradient. Unfortunately, their data management was entirely manual, and the files are a disaster.
 
 They left you with four separate datasets:
 
-1.	estuary_catch_log.xlsx: Handwritten field counts of fish species (using common names), spread across multiple spreadsheet tabs.
+1.  estuary_catch_log.xlsx: Handwritten field counts of fish species (using common names), spread across multiple spreadsheet tabs.
 
-2.	estuary_metadata.csv: The spatial coordinates and estuary zones for each site.
+2.  estuary_metadata.csv: The spatial coordinates and estuary zones for each site.
 
-3.	estuary_sonde_data.csv: High-frequency water quality sensor readings.
+3.  estuary_sonde_data.csv: High-frequency water quality sensor readings.
 
-4.	species_dictionary.csv: A taxonomic lookup table linking local common names to their accepted scientific names.
+4.  species_dictionary.csv: A taxonomic lookup table linking local common names to their accepted scientific names.
 
-**Your mission** is to write a single, reproducible R script (or .qmd) that ingests this mess, cleans it, joins it into a single master dataset, and produces a publication-ready visualisation of the estuary's ecology.
-# ==============================================================================
+**Your mission** is to write a single, reproducible R script (or .qmd) that ingests this mess, cleans it, joins it into a single master dataset, and produces a publication-ready visualisation of the estuary's ecology. 
+
+
 # Phase 1: Ingestion and Decontamination
-# ==============================================================================
 
-**1. Load and bind all tabs from the catch log dynamically**
+
+**Load and bind all tabs from the catch log dynamically**
+
 ```{r upload all the tabs}
 # The catch log has one tab per site, so I read each tab into its own df
 catch1 <- read_excel(here::here("data/workshop2/estuary_catch_log.xlsx"), sheet = "Lower_ross")
@@ -649,10 +662,10 @@ catch3
 catch4
 ```
 
-The column names look the same, but the names in the collumns look diffrent, so i can join them together 
+The column names look the same, but the names in the collumns look diffrent, so i can join them together
 
+**String Standardisation for catch log**
 
-**2. String Standardisation for catch log**
 ```{r Join the catch sheets}
 all_catch <- bind_rows(catch1, catch2, catch3, catch4)
 # Remove the separate tabs to keep the environment clean
@@ -661,6 +674,7 @@ all_catch
 ```
 
 **Preliminary checks**
+
 ```{r inspect-all_catch}
 #check the structure: column names, types and the first few rows
 all_catch
@@ -668,6 +682,7 @@ head(all_catch)
 glimpse(all_catch)
 str(all_catch)
 ```
+
 glimpse () dosen't tell me how many sites or species there are, so I need to check this, i use distinct () to check.
 
 ```{r distinct-catch}
@@ -679,20 +694,22 @@ all_catch %>%
   distinct(species)
 ```
 
+**Load and standardise metadata**
 
-**3. Load and standardise metadata**
 ```{r metadata}
 metadata <- read_csv("../data/workshop2/estuary_metadata.csv")
 metadata
 ```
 
 **Checks**
+
 ```{r inspect-metadata}
 # Quick look at the columns and types
 head(metadata)
 glimpse(metadata)
 ```
-Names are no good in ether of the two (metadata and the catch sheets), this needs to be fixed. 
+
+Names are no good in ether of the two (metadata and the catch sheets), this needs to be fixed.
 
 ```{r Tidy names}
 # clean Site and species in the catch data:
@@ -726,6 +743,7 @@ metadata # view the data
 ```
 
 **Recheck**
+
 ```{r recheck-site-names}
 # Check the cleaning worked and the site names look right
 all_catch_clean %>%  
@@ -737,7 +755,8 @@ str(metadata)
 # Note: The column is called site in the catch data but site_name in the metadata, so i'll need to tell the join they're the same thing later on
 ```
 
-**4. Load and clean species dictionary**
+**Load and clean species dictionary**
+
 ```{r load-species-dict}
 # The dictonary link the comon names to the scientific names
 species_dict <- read_csv("../data/workshop2/species_dictionary.csv")
@@ -745,7 +764,8 @@ species_dict <- read_csv("../data/workshop2/species_dictionary.csv")
 head(species_dict)
 ```
 
-Check whether the species names match the common names in the dictionary 
+Check whether the species names match the common names in the dictionary
+
 ```{r check-species-names}
 # Species names in the catch data
 all_catch_clean %>%  
@@ -754,10 +774,11 @@ all_catch_clean %>%
 species_dict %>% 
   distinct(common_name)
 ```
+
 the names match, the only difference is the column name: "species" in the catch data and "common_name" in the dictionary.
 
-
 **Create new variable ("scientific_name") in catch log by joining with taxonomic dictionary**
+
 ```{r join-species-dict}
 all_catch_clean <- all_catch_clean %>% 
   mutate(common_name = species) %>% # Make common_name column (a copy of species) so it has the same name as the column in th dictionary
@@ -766,23 +787,26 @@ all_catch_clean # Check it worked
 ```
 
 Doubble check it now has 6 columns
+
 ```{r}
 glimpse(all_catch_clean)
 ```
 
+**Load and clean high-frequency sonde water quality data** 
 
-
-**5. Load and clean high-frequency sonde water quality data**
 This is already done in the div_sensor
+
 ```{r load-sonde}
 # This runs the diw_sensor.R script, which cleans the sonde data, and makes sensor_daily: the daily mean temprature, salinity and turbidity for each site
 source(here::here("code/diw_sensor.R"))
 ```
-# ==============================================================================
+
+
 # Phase 2: The Relational Architecture
-# ==============================================================================
+
 
 **The Grand Join: Merge catch, spatial metadata, and daily sensor summaries**
+
 ```{r join-all}
 # The grand join: starts with the catch data and add on the metadat and daily sensor data
 catch_data_final <- all_catch_clean %>% 
@@ -792,29 +816,29 @@ catch_data_final <- all_catch_clean %>%
   left_join(sensor_daily, by = join_by(site, date))
 ```
 
-
 **Check**
+
 ```{r check-final-join}
 # Check the join worked and the new columns are there
 glimpse(catch_data_final)
 ```
+
 looks good, but there are some missing rows
 
-4 x species
-4 x sites
-30 surveys
+4 x species 4 x sites 30 surveys
 
 4x4x30 = 470
 
-There should be 480 rows not just 427. 
+There should be 480 rows not just 427.
 
 This might be because there were some zero counts of species at different sites. i need to change these so they are actually 0 and NA.
 
-# ==============================================================================
-# Phase 3: The Zero-Catch Framework
-# ==============================================================================
+
+# Phase 3: The Zero-Catch Framework 
+
 
 **Ensure every species is represented at every site, zone, and date combination**
+
 ```{r wrangle-final-zeros}
 catch_data_final <- 
 catch_data_final %>% 
@@ -836,11 +860,14 @@ catch_data_final
 ```
 
 Now there are 480 rows, yay
-# ==============================================================================
-# Phase 4: Statistical Extraction (Summary Table Deliverable)
-# ==============================================================================
-**Salinity**
+
+
+# Phase 4: Statistical Extraction (Summary Table Deliverable) 
+
+
+**Salinity** 
 Is there a difference in salinity at the diffrent sites?
+
 ```{r Salinity-summary}
 # Make a table of the median salinity and sd for each zone
 sal_sum <- 
@@ -862,10 +889,12 @@ sal_sum %>%
        x = "Zone",
        y = "Median Salinity (ppt)")
 ```
-Yes there is a difrence in salinity at each site. 
 
-**Turbidity**
+Yes there is a difrence in salinity at each site.
+
+**Turbidity** 
 Is there a difrence in turbidity at each site?
+
 ```{r Turbidity-summary}
 # same as salinity: median and sd of turbidity for each zone
 turb_sum <- 
@@ -888,10 +917,11 @@ turb_sum %>%
        y = "Median Turbidity (NTU)")
 ```
 
-There is some diffrence, but not a lot. 
+There is some diffrence, but not a lot.
 
-**Temprature**
+**Temprature** 
 Is there any diffrence?
+
 ```{r Temprature-summary}
 # Same again for temperature
 temp_sum <- 
@@ -914,9 +944,10 @@ temp_sum %>%
 
 ```
 
-There is some diffrence, but not a lot. 
+There is some diffrence, but not a lot.
 
 **Generate statistical summary table for fish counts and salinity per species and zone**
+
 ```{r}
 statistical_summary <- catch_data_final %>% 
   group_by(zone, scientific_name) %>% 
@@ -948,11 +979,12 @@ statistical_summary %>%
   )
 ```
 
-# ==============================================================================
+
 # Phase 5: Visual Communication (Publication-Ready Multi-Panel Plot)
-# ==============================================================================
+
 
 **Publication ready salinity plot**
+
 ```{r Salinity-plot}
 #| fig-cap: "Salinity Gradient across zones. Ross River Estuary System, Townsville, NQ, Australia May 2026."
 
@@ -971,6 +1003,7 @@ sal_sum %>%
 #### Fish abundance patterns
 
 **Calculate summary stats**
+
 ```{r Fish-stats}
 # mean catch and standard error (SEM) for each species in each zone
 fish_stats <- catch_data_final %>% 
@@ -985,6 +1018,7 @@ fish_stats
 ```
 
 **Plot the fish data**
+
 ```{r Fish-plot}
 fish_stats %>%  
   ggplot(aes(x = zone, y = mean_catch, fill = scientific_name)) +
@@ -1017,5 +1051,3 @@ fish_stats %>%
     y = "Abundance (per day)"
   )
 ```
-
-
