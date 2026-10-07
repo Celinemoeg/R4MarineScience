@@ -1,12 +1,26 @@
 ---
 title: "Workshop 1: Foundations of Marine Data Science"
 author: Celine M. Egsaeter
+date: today
+date-format: "D MMMM YYYY"
 format:
   html:
-    embed-resources: true
+    theme: minty             # Clean, modern typography (the nice once: 'minty','cosmo' 'flatly', 'zephyr')
+    toc: true                 # Floating Table of Contents
+    toc-depth: 3
+    toc-location: left
+    code-fold: show           # Allows readers to collapse/expand code blocks
+    code-summary: "Show code"
+    code-tools: true          # Adds a toggle to view source code
+    embed-resources: true     # Keeps everything in a single, shareable HTML file
+    df-print: paged           # Formats raw data frame prints cleanly
 execute:
   warning: false
   message: false
+  echo: true                  # Ensures code chunks are visible by default
+fig-width: 8
+fig-height: 5
+fig-align: center
 ---
 
 #### Housekeeping
